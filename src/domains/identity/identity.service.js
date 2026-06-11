@@ -21,8 +21,8 @@
 
 import crypto from 'crypto';
 
-import User from './models/user.model.js';
-import RefreshToken from './models/refreshToken.model.js';
+import User from './user.model.js';
+import RefreshToken from './refreshToken.model.js';
 import { generateAccessToken, generateRefreshToken } from '../../utils/jwt.js';
 import { ConflictError } from '../../errors/errorTypes.js';
 

@@ -26,6 +26,7 @@ import config from './config/env.js';
 import errorHandler from './middleware/errorHandler.js';
 import { NotFoundError } from './errors/errorTypes.js';
 import healthRoutes from "./domains/health/health.routes.js";
+import identityRoutes from './domains/identity/identity.routes.js';
 
 const app = express();
 
@@ -56,10 +57,13 @@ app.use(cors({
 
 // ─── Request Parsing ──────────────────────────────────────────────────────────
 
-app.use("/api/v1/health", healthRoutes);
-
 app.use(express.json({ limit: '10kb' }));           // Parse JSON bodies, cap size
 app.use(express.urlencoded({ extended: true }));     // Parse URL-encoded bodies
+
+// ─── Routes ──────────────────────────────────────────────────────────
+
+app.use("/api/v1/health", healthRoutes);
+app.use('/api/v1/auth', identityRoutes);
 
 // ─── HTTP Request Logging ─────────────────────────────────────────────────────
 // morgan 'dev' format logs: METHOD /path STATUS response-time

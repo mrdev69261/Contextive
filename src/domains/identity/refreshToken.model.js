@@ -21,11 +21,24 @@ const refreshTokenSchema = new Schema(
       index: true,
     },
 
+    tokenId: {
+     type: String,
+     required: true,
+     unique: true,
+     index: true,
+    },
+
     tokenHash: {
       type: String,
       required: true,
       unique: true,
       trim: true,
+    },
+
+    password: {
+        type: String,
+        required: true,
+        select: false,
     },
 
     userAgent: {
@@ -41,9 +54,8 @@ const refreshTokenSchema = new Schema(
     },
 
     expiresAt: {
-      type: Date,
-      required: true,
-      index: true,
+        type: Date,
+        required: true,
     },
 
     isRevoked: {
