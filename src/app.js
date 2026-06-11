@@ -25,6 +25,7 @@ import morgan from 'morgan';
 import config from './config/env.js';
 import errorHandler from './middleware/errorHandler.js';
 import { NotFoundError } from './errors/errorTypes.js';
+import healthRoutes from "./domains/health/health.routes.js";
 
 const app = express();
 
@@ -54,6 +55,8 @@ app.use(cors({
 }));
 
 // ─── Request Parsing ──────────────────────────────────────────────────────────
+
+app.use("/api/v1/health", healthRoutes);
 
 app.use(express.json({ limit: '10kb' }));           // Parse JSON bodies, cap size
 app.use(express.urlencoded({ extended: true }));     // Parse URL-encoded bodies
