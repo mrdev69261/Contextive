@@ -51,3 +51,25 @@ export const registerValidator = [
       `Password must be between ${PASSWORD_MIN_LENGTH} and ${PASSWORD_MAX_LENGTH} characters`
     ),
 ];
+
+export const loginValidator = [
+  body('email')
+    .exists({ checkFalsy: true })
+    .withMessage('Email is required')
+    .bail()
+    .isString()
+    .withMessage('Email must be a string')
+    .bail()
+    .trim()
+    .isEmail()
+    .withMessage('Email must be a valid email address')
+    .bail()
+    .normalizeEmail(),
+
+  body('password')
+    .exists({ checkFalsy: true })
+    .withMessage('Password is required')
+    .bail()
+    .isString()
+    .withMessage('Password must be a string'),
+];

@@ -35,11 +35,11 @@ const refreshTokenSchema = new Schema(
       trim: true,
     },
 
-    password: {
-        type: String,
-        required: true,
-        select: false,
-    },
+    // password: {
+    //     type: String,
+    //     required: true,
+    //     select: false,
+    // },
 
     userAgent: {
       type: String,

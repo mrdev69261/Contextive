@@ -24,7 +24,7 @@ import crypto from 'crypto';
 import User from './user.model.js';
 import RefreshToken from './refreshToken.model.js';
 import { generateAccessToken, generateRefreshToken } from '../../utils/jwt.js';
-import { ConflictError } from '../../errors/errorTypes.js';
+import { ConflictError, AuthenticationError, } from '../../errors/errorTypes.js';
 
 const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -79,6 +79,67 @@ export async function registerUser({
       id: userId,
       name: user.name,
       email: user.email,
+    },
+    tokens: {
+      accessToken,
+      refreshToken,
+    },
+  };
+}
+
+export async function loginUser({
+  email,
+  password,
+  userAgent = null,
+  ipAddress = null,
+}) {
+  const user = await User.findOne({ email }).select('+password');
+
+  if (!user) {
+    throw new AuthenticationError('Invalid email or password');
+  }
+
+  const isPasswordValid = await user.comparePassword(password);
+
+  if (!isPasswordValid) {
+    throw new AuthenticationError('Invalid email or password');
+  }
+
+  const userId = user._id.toString();
+  const tokenId = crypto.randomUUID();
+
+  const accessToken = generateAccessToken(userId);
+
+  const refreshToken = generateRefreshToken({
+    userId,
+    tokenId,
+  });
+
+  const refreshTokenHash = hashRefreshToken(refreshToken);
+
+  const expiresAt = new Date(
+    Date.now() + REFRESH_TOKEN_TTL_MS
+  );
+
+  await RefreshToken.create({
+    userId: user._id,
+    tokenId,
+    tokenHash: refreshTokenHash,
+    userAgent,
+    ipAddress,
+    expiresAt,
+    isRevoked: false,
+  });
+
+  user.lastLoginAt = new Date();
+  await user.save();
+
+  return {
+    user: {
+      id: userId,
+      name: user.name,
+      email: user.email,
+      lastLoginAt: user.lastLoginAt,
     },
     tokens: {
       accessToken,
