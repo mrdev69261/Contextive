@@ -24,7 +24,7 @@ import crypto from 'crypto';
 import User from './user.model.js';
 import RefreshToken from './refreshToken.model.js';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../../utils/jwt.js';
-import { ConflictError, AuthenticationError, } from '../../errors/errorTypes.js';
+import { ConflictError, AuthenticationError, NotFoundError } from '../../errors/errorTypes.js';
 
 const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -273,4 +273,14 @@ export async function logoutUserSession({ refreshToken }) {
     },
   };
 
+}
+
+export async function getCurrentUser(userId) {
+  const user = await User.findById(userId);
+
+  if (!user) {
+    throw new NotFoundError('User not found');
+  }
+
+  return user;
 }

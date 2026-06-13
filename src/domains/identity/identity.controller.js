@@ -1,6 +1,6 @@
 import asyncHandler from '../../utils/asyncHandler.js';
 import { ApiResponse } from '../../utils/apiResponse.js';
-import { registerUser, loginUser, refreshUserSession, logoutUserSession } from './identity.service.js';
+import { registerUser, loginUser, refreshUserSession, logoutUserSession, getCurrentUser } from './identity.service.js';
 
 export const register = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
@@ -63,6 +63,16 @@ export const logout = asyncHandler(async (req, res) => {
     message: 'Logout successful',
     data: result,
   });
+});
+
+export const getMe = asyncHandler(async (req, res) => {
+  const result = await getCurrentUser(req.user._id);
+
+  return ApiResponse.success(
+    res,
+    result,
+    'Current user retrieved successfully'
+  );
 });
 
 // console.log(req.body);

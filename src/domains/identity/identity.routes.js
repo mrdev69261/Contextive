@@ -13,8 +13,8 @@
 // - Perform manual validation
 
 import { Router } from 'express';
-
-import { register, login, refresh, logout } from './identity.controller.js';
+import protect from '../../middleware/protect.js';
+import { register, login, refresh, logout, getMe } from './identity.controller.js';
 import { registerValidator, loginValidator, refreshValidator, logoutValidator } from './identity.validator.js';
 import validateRequest from '../../middleware/validateRequest.js';
 
@@ -47,5 +47,7 @@ router.post(
   validateRequest,
   logout
 );
+
+router.get('/me', protect, getMe);
 
 export default router;
