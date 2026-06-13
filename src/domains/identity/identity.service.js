@@ -23,7 +23,7 @@ import crypto from 'crypto';
 
 import User from './user.model.js';
 import RefreshToken from './refreshToken.model.js';
-import { generateAccessToken, generateRefreshToken } from '../../utils/jwt.js';
+import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../../utils/jwt.js';
 import { ConflictError, AuthenticationError, } from '../../errors/errorTypes.js';
 
 const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -144,6 +144,98 @@ export async function loginUser({
     tokens: {
       accessToken,
       refreshToken,
+    },
+  };
+}
+
+function compareTokenHashes(a, b) {
+  const hashA = Buffer.from(a, 'hex');
+  const hashB = Buffer.from(b, 'hex');
+
+  if (hashA.length !== hashB.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(hashA, hashB);
+}
+
+export async function refreshUserSession({
+  refreshToken,
+  userAgent = null,
+  ipAddress = null,
+}) {
+  let decoded;
+
+  try {
+    decoded = verifyRefreshToken(refreshToken);
+  } catch {
+    throw new AuthenticationError('Invalid or expired refresh token');
+  }
+
+  const { userId, tokenId } = decoded;
+
+  const existingToken = await RefreshToken.findOne({ tokenId });
+
+  if (!existingToken) {
+    throw new AuthenticationError('Invalid or expired refresh token');
+  }
+
+  if (existingToken.isRevoked) {
+    throw new AuthenticationError('Invalid or expired refresh token');
+  }
+
+  if (existingToken.expiresAt.getTime() <= Date.now()) {
+    throw new AuthenticationError('Invalid or expired refresh token');
+  }
+
+  if (existingToken.userId.toString() !== userId) {
+    throw new AuthenticationError('Invalid or expired refresh token');
+  }
+
+  const incomingTokenHash = hashRefreshToken(refreshToken);
+
+  if (!compareTokenHashes(incomingTokenHash, existingToken.tokenHash)) {
+    throw new AuthenticationError('Invalid or expired refresh token');
+  }
+
+  existingToken.isRevoked = true;
+  await existingToken.save();
+
+  const user = await User.findById(userId);
+
+  if (!user) {
+    throw new AuthenticationError('Invalid or expired refresh token');
+  }
+
+  const newTokenId = crypto.randomUUID();
+  const newAccessToken = generateAccessToken(userId);
+  const newRefreshToken = generateRefreshToken({
+    userId,
+    tokenId: newTokenId,
+  });
+
+  const newRefreshTokenHash = hashRefreshToken(newRefreshToken);
+  const newExpiresAt = new Date(Date.now() + REFRESH_TOKEN_TTL_MS);
+
+  await RefreshToken.create({
+    userId: user._id,
+    tokenId: newTokenId,
+    tokenHash: newRefreshTokenHash,
+    userAgent,
+    ipAddress,
+    expiresAt: newExpiresAt,
+    isRevoked: false,
+  });
+
+  return {
+    user: {
+      id: user._id.toString(),
+      name: user.name,
+      email: user.email,
+    },
+    tokens: {
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
     },
   };
 }

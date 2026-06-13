@@ -14,8 +14,8 @@
 
 import { Router } from 'express';
 
-import { register, login } from './identity.controller.js';
-import { registerValidator, loginValidator } from './identity.validator.js';
+import { register, login, refresh } from './identity.controller.js';
+import { registerValidator, loginValidator, refreshValidator } from './identity.validator.js';
 import validateRequest from '../../middleware/validateRequest.js';
 
 const router = Router();
@@ -32,6 +32,13 @@ router.post(
   loginValidator,
   validateRequest,
   login
+);
+
+router.post(
+  '/refresh',
+  refreshValidator,
+  validateRequest,
+  refresh
 );
 
 export default router;

@@ -73,3 +73,14 @@ export const loginValidator = [
     .isString()
     .withMessage('Password must be a string'),
 ];
+
+export const refreshValidator = [
+  body('refreshToken')
+    .exists({ checkFalsy: true })
+    .withMessage('Refresh token is required')
+    .bail()
+    .isString()
+    .withMessage('Refresh token must be a string')
+    .bail()
+    .trim(),
+];
