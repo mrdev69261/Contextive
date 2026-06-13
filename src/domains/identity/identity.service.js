@@ -239,3 +239,38 @@ export async function refreshUserSession({
     },
   };
 }
+
+export async function logoutUserSession({ refreshToken }) {
+  let decoded;
+
+  try {
+    decoded = verifyRefreshToken(refreshToken);
+  } catch {
+    throw new AuthenticationError('Invalid or expired refresh token');
+  }
+
+  const { tokenId } = decoded;
+
+  const existingToken = await RefreshToken.findOne({ tokenId });
+
+  if (!existingToken) {
+    throw new AuthenticationError('Invalid or expired refresh token');
+  }
+
+  if (existingToken.isRevoked) {
+    throw new AuthenticationError('Invalid or expired refresh token');
+  }
+
+  existingToken.isRevoked = true;
+  existingToken.revokedAt = new Date();
+
+  await existingToken.save();
+
+  return {
+    session: {
+      tokenId: existingToken.tokenId,
+      revokedAt: existingToken.revokedAt,
+    },
+  };
+
+}

@@ -63,6 +63,10 @@ const refreshTokenSchema = new Schema(
       default: false,
       index: true,
     },
+    revokedAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,

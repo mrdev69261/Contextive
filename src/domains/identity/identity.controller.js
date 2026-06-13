@@ -1,6 +1,6 @@
 import asyncHandler from '../../utils/asyncHandler.js';
 import { ApiResponse } from '../../utils/apiResponse.js';
-import { registerUser, loginUser, refreshUserSession } from './identity.service.js';
+import { registerUser, loginUser, refreshUserSession, logoutUserSession } from './identity.service.js';
 
 export const register = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
@@ -51,6 +51,18 @@ export const refresh = asyncHandler(async (req, res) => {
     result,
     'Session refreshed successfully'
   );
+});
+
+export const logout = asyncHandler(async (req, res) => {
+  const { refreshToken } = req.body;
+
+  const result = await logoutUserSession({ refreshToken });
+
+  return ApiResponse.success(res, {
+    statusCode: 200,
+    message: 'Logout successful',
+    data: result,
+  });
 });
 
 // console.log(req.body);
