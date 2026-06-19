@@ -1,6 +1,6 @@
 import asyncHandler from '../../utils/asyncHandler.js';
 import { ApiResponse } from '../../utils/apiResponse.js';
-import { registerUser, loginUser, refreshUserSession, logoutUserSession, getCurrentUser } from './identity.service.js';
+import { registerUser, loginUser, refreshUserSession, logoutUserSession, getCurrentUser, changePassword } from './identity.service.js';
 
 export const register = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
@@ -72,6 +72,22 @@ export const getMe = asyncHandler(async (req, res) => {
     res,
     result,
     'Current user retrieved successfully'
+  );
+});
+
+export const changePasswordController = asyncHandler(async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+
+  const result = await changePassword({
+    userId: req.user._id,
+    currentPassword,
+    newPassword,
+  });
+
+  return ApiResponse.success(
+    res,
+    result,
+      'Password changed successfully'
   );
 });
 

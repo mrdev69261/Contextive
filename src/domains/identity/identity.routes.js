@@ -14,8 +14,8 @@
 
 import { Router } from 'express';
 import protect from '../../middleware/protect.js';
-import { register, login, refresh, logout, getMe } from './identity.controller.js';
-import { registerValidator, loginValidator, refreshValidator, logoutValidator } from './identity.validator.js';
+import { register, login, refresh, logout, getMe, changePasswordController } from './identity.controller.js';
+import { registerValidator, loginValidator, refreshValidator, logoutValidator, changePasswordValidator } from './identity.validator.js';
 import validateRequest from '../../middleware/validateRequest.js';
 
 const router = Router();
@@ -49,5 +49,13 @@ router.post(
 );
 
 router.get('/me', protect, getMe);
+
+router.post(
+  '/change-password',
+  protect,
+  changePasswordValidator,
+  validateRequest,
+  changePasswordController
+);
 
 export default router;

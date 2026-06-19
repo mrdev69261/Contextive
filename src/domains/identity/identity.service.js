@@ -24,7 +24,7 @@ import crypto from 'crypto';
 import User from './user.model.js';
 import RefreshToken from './refreshToken.model.js';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../../utils/jwt.js';
-import { ConflictError, AuthenticationError, NotFoundError } from '../../errors/errorTypes.js';
+import { ConflictError, AuthenticationError, NotFoundError, ValidationError } from '../../errors/errorTypes.js';
 
 const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -283,4 +283,46 @@ export async function getCurrentUser(userId) {
   }
 
   return user;
+}
+
+export async function changePassword({ userId, currentPassword, newPassword }) {
+  const user = await User.findById(userId).select('+password');
+
+  if (!user) {
+    throw new AuthenticationError('Authentication failed');
+  }
+
+  const isCurrentPasswordValid = await user.comparePassword(currentPassword);
+
+  if (!isCurrentPasswordValid) {
+    throw new AuthenticationError('Current password is incorrect');
+  }
+
+  const isSamePassword = await user.comparePassword(newPassword);
+
+  if (isSamePassword) {
+    throw new ValidationError('New password must be different from current password');
+  }
+
+  user.password = newPassword;
+  await user.save();
+
+  const revokedAt = new Date();
+
+  await RefreshToken.updateMany(
+    {
+      userId: user._id,
+      isRevoked: false,
+    },
+    {
+      $set: {
+        isRevoked: true,
+        revokedAt,
+      },
+    }
+  );
+
+  return {
+    success: true,
+  };
 }

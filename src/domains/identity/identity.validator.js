@@ -95,3 +95,19 @@ export const logoutValidator = [
     .bail()
     .trim(),
 ];
+
+export const changePasswordValidator = [
+  body('currentPassword')
+    .exists({ checkFalsy: true })
+    .withMessage('Current password is required')
+    .bail()
+    .isString()
+    .withMessage('Current password must be a string'),
+
+  body('newPassword')
+    .exists({ checkFalsy: true })
+    .withMessage('New password is required')
+    .bail()
+    .isString()
+    .withMessage('New password must be a string'),
+];
